@@ -1,0 +1,27 @@
+# Fly.io 設定檔
+# 部署指令：flyctl launch（首次）/ flyctl deploy（之後）
+
+app = "rent-house-report"   # ← 改成你的 app 名稱
+primary_region = "nrt"      # 東京，最接近台灣
+
+[build]
+
+[env]
+  PORT = "8080"
+  CONFIG_PATH = "config.yaml"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true   # 沒流量時自動休眠，省費用
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[mounts]
+  source = "rent_data"
+  destination = "/app/data"   # 持久化 DB 和 log

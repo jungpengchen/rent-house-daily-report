@@ -1,0 +1,58 @@
+name: Build & Deploy Server
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.py'
+      - 'requirements.txt'
+      - 'Dockerfile'
+      - 'config.yaml'
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: rent-house-report-server
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+  # ── 部署到 Fly.io（選用，需設定 FLY_API_TOKEN secret）────────────────────
+  deploy-fly:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: ${{ vars.DEPLOY_TARGET == 'fly' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Fly.io
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
