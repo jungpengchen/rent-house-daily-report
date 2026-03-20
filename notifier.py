@@ -54,6 +54,13 @@ def send_telegram(message: str, cfg: dict) -> bool:
                 json={"chat_id": chat_id, "text": chunk, "parse_mode": "Markdown"},
                 timeout=15,
             )
+            if resp.status_code == 400:
+                # Markdown parse error — retry without parse_mode
+                resp = requests.post(
+                    url,
+                    json={"chat_id": chat_id, "text": chunk},
+                    timeout=15,
+                )
             resp.raise_for_status()
             logger.info("Telegram: message sent (%d chars)", len(chunk))
         except Exception as exc:

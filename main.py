@@ -148,10 +148,10 @@ def run_pipeline(cfg: dict, dry_run: bool = False) -> int:
 
     # ── 7. Notify ─────────────────────────────────────────────────────────────
     sent_channels = 0
-    if not dry_run and new_listings:
+    if not dry_run:
         sent_channels = dispatch(report, cfg)
         logger.info("Notifications dispatched to %d channel(s)", sent_channels)
-    elif dry_run:
+    else:
         logger.info("Dry-run: skipping notifications")
 
     # ── 8. Record run ─────────────────────────────────────────────────────────
