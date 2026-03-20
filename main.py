@@ -138,7 +138,14 @@ def run_pipeline(cfg: dict, dry_run: bool = False) -> int:
     logger.info("New listings (not seen before): %d", len(new_listings))
 
     # ── 6. Generate report ────────────────────────────────────────────────────
-    report = generate_report(new_listings)
+    stats = {
+        "crawled": len(raw_listings),
+        "normalised": len(normalised),
+        "filtered_out": rejected,
+        "deduped": len(deduped_with_notes),
+        "new": len(new_listings),
+    }
+    report = generate_report(new_listings, stats=stats)
     logger.info("Report generated (%d chars)", len(report))
 
     # Always print to stdout for debugging

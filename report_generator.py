@@ -66,7 +66,7 @@ def _format_listing(index: int, listing: dict, notes: list[str]) -> str:
 
     if extra_urls:
         also = "  📎 同物件其他平台：" + "、".join(
-            f"[{u['source']}]({u['url']})" for u in extra_urls
+            f"{u['source']}: {u['url']}" for u in extra_urls
         )
         lines.append(also)
 
@@ -76,12 +76,13 @@ def _format_listing(index: int, listing: dict, notes: list[str]) -> str:
     return "\n".join(lines)
 
 
-def generate_report(listings_with_notes: list[tuple[dict, list[str]]]) -> str:
+def generate_report(listings_with_notes: list[tuple[dict, list[str]]], stats: dict | None = None) -> str:
     """
     Build the full daily report string.
 
     Args:
         listings_with_notes: list of (listing_dict, notes_list)
+        stats: optional pipeline stats for diagnostics
 
     Returns:
         Formatted report string (Markdown-compatible).
@@ -89,16 +90,24 @@ def generate_report(listings_with_notes: list[tuple[dict, list[str]]]) -> str:
     today = date.today().strftime("%Y-%m-%d")
     count = len(listings_with_notes)
 
+    stats_line = ""
+    if stats:
+        stats_line = (
+            f"\n[診斷] 爬取 {stats.get('crawled', '?')} 筆"
+            f" → 過濾後 {stats.get('deduped', '?')} 筆"
+            f" → 新物件 {stats.get('new', '?')} 筆"
+        )
+
     if count == 0:
         return (
-            f"📋 **591 台北租屋日報 — {today}**\n\n"
-            "今日無新上架符合條件的物件。"
+            f"591 台北租屋日報 {today}\n\n"
+            f"今日無新上架符合條件的物件。{stats_line}"
         )
 
     header = (
-        f"📋 **591 台北租屋日報 — {today}**\n"
+        f"591 台北租屋日報 {today}\n"
         f"共 {count} 筆新物件符合條件\n"
-        f"搜尋條件：台北市 ｜ 整層住家/獨立套房 ｜ ≤38,000元 ｜ ≥20坪 ｜ 可開伙\n"
+        f"搜尋條件：台北市 | 整層住家/獨立套房 | ≤38,000元 | ≥20坪 | 可開伙\n"
     )
 
     sections = [
